@@ -1,6 +1,5 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
-import ComposerState from 'flarum/forum/states/ComposerState';
 import TextEditor from 'flarum/common/components/TextEditor';
 
 const PREVIEW_MIN_HEIGHT = 120;
@@ -139,10 +138,6 @@ function enableSplitViewOnComposer(path) {
 }
 
 app.initializers.add('nodeloc-split-view', () => {
-  extend(ComposerState.prototype, 'load', function () {
-    this.isSplitView = false;
-  });
-
   extend(TextEditor.prototype, 'oncreate', function () {
     if (!this.attrs.preview || !this.attrs.composer) return;
 
