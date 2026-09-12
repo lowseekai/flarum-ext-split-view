@@ -32,7 +32,7 @@
     min-width: 0;
     min-height: 120px;
     box-sizing: border-box;
-    background-color: @body-bg;
+    background-color: var(--body-bg);
     border-left: 1px dashed @primary-color;
     overflow-x: hidden;
     overflow-y: auto;
@@ -104,7 +104,7 @@
 
 @media (prefers-color-scheme: dark) {
   .Composer {
-    background-color: @body-bg;
+    background-color: var(--body-bg);
     color: @text-color;
   }
 }
