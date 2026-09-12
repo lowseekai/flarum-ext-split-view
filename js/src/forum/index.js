@@ -1,9 +1,6 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import ComposerState from 'flarum/forum/states/ComposerState';
-import DiscussionComposer from 'flarum/forum/components/DiscussionComposer';
-import ReplyComposer from 'flarum/forum/components/ReplyComposer';
-import EditPostComposer from 'flarum/forum/components/EditPostComposer';
 import TextEditor from 'flarum/common/components/TextEditor';
 
 const PREVIEW_MIN_HEIGHT = 120;
@@ -133,6 +130,14 @@ function toggleSplitView(event) {
   m.redraw();
 }
 
+function enableSplitViewOnComposer(path) {
+  // Composer bodies are lazy-loaded in Flarum 2, and jumpToPreview is an
+  // instance field, so patch each body's oninit after the core module loads.
+  extend(path, 'oninit', function () {
+    this.jumpToPreview = toggleSplitView;
+  });
+}
+
 app.initializers.add('nodeloc-split-view', () => {
   extend(ComposerState.prototype, 'load', function () {
     this.isSplitView = false;
@@ -155,7 +160,7 @@ app.initializers.add('nodeloc-split-view', () => {
     stopObservingEditor(this);
   });
 
-  DiscussionComposer.prototype.jumpToPreview = toggleSplitView;
-  ReplyComposer.prototype.jumpToPreview = toggleSplitView;
-  EditPostComposer.prototype.jumpToPreview = toggleSplitView;
+  enableSplitViewOnComposer('flarum/forum/components/DiscussionComposer');
+  enableSplitViewOnComposer('flarum/forum/components/ReplyComposer');
+  enableSplitViewOnComposer('flarum/forum/components/EditPostComposer');
 });
