@@ -7,13 +7,12 @@
   "type": "flarum-extension",
   "license": "MIT",
   "support": {
-    "issues": "https://github.com/nodeloc/flarum-ext-split-view",
-    "source": "https://github.com/nodeloc/flarum-ext-split-view/issues",
-    "email": "james@nodeloc.com"
+    "issues": "https://github.com/lowseekai/flarum-ext-split-view/issues",
+    "source": "https://github.com/lowseekai/flarum-ext-split-view"
   },
-  "homepage": "https://www.nodeloc.com",
+  "homepage": "https://github.com/lowseekai/flarum-ext-split-view",
   "require": {
-    "flarum/core": "^1.7"
+    "flarum/core": "^2.0.0-rc.8"
   },
   "authors": [
     {
@@ -32,6 +31,9 @@
     }
   },
   "extra": {
+    "branch-alias": {
+      "dev-flarum-2.x": "2.0.x-dev"
+    },
     "flarum-extension": {
       "title": "Split View",
       "category": "feature",
