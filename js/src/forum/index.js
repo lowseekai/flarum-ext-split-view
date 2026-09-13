@@ -15,6 +15,7 @@ function ensurePreviewElement(component) {
   if (!container) return null;
 
   let preview = container.querySelector('.Split-view');
+  const editorWrapper = container.querySelector('.ComposerBody-mentionsWrapper');
 
   if (!preview) {
     preview = document.createElement('div');
@@ -22,6 +23,12 @@ function ensurePreviewElement(component) {
     preview.setAttribute('role', 'region');
     preview.setAttribute('aria-label', 'Preview');
     container.append(preview);
+  }
+
+  // Flarum can render the preview before the editor wrapper. Keep the
+  // Markdown editor on the left and the preview on the right.
+  if (editorWrapper && editorWrapper.nextElementSibling !== preview) {
+    editorWrapper.after(preview);
   }
 
   return preview;

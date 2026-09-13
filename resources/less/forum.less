@@ -16,10 +16,18 @@
     align-items: stretch;
   }
 
-  .TextEditor-editorContainer > .TextEditor-editor {
+  .TextEditor-editorContainer.is-split-view > .ComposerBody-mentionsWrapper,
+  .TextEditor-editorContainer.is-split-view > .Split-view {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .TextEditor-editorContainer.is-split-view .ComposerBody-emojiWrapper,
+  .TextEditor-editorContainer.is-split-view .TextEditor-editor {
     width: 100% !important;
     min-width: 0;
     min-height: 0;
+    box-sizing: border-box;
   }
 
   .Split-view {
