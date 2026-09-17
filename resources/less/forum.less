@@ -128,16 +128,38 @@
 
   .Composer,
   .ComposerPage {
-    // Flarum renders every Composer header item as a full-width block on
-    // phones. Keep the optional composer actions compact so they don't
-    // consume the editor's usable height.
     .ComposerBody-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      column-gap: 0;
+      row-gap: 0;
+
+      > .item-title {
+        display: flex;
+        flex: 0 0 100%;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        height: var(--header-height-phone);
+        margin: calc(~"0px - var(--header-height-phone)") 0 0;
+        padding: 0 50px;
+        border-bottom: 0;
+      }
+
       > .item-tags,
       > .item-readPermission,
       > .item-lottery,
+      > .item-pay2see,
       > .item-redPacket {
-        display: inline-block;
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
         width: auto;
+        max-width: 100%;
+        box-sizing: border-box;
         padding: 8px 4px;
         border-bottom: 0;
         vertical-align: middle;
@@ -145,7 +167,9 @@
 
       > .item-discussionTitle {
         display: block;
+        flex: 0 0 100%;
         width: 100%;
+        box-sizing: border-box;
         padding: 8px 15px;
       }
     }
