@@ -128,9 +128,39 @@
 
   .Composer,
   .ComposerPage {
+    // Flarum renders every Composer header item as a full-width block on
+    // phones. Keep the optional composer actions compact so they don't
+    // consume the editor's usable height.
+    .ComposerBody-header {
+      > .item-tags,
+      > .item-readPermission,
+      > .item-lottery,
+      > .item-redPacket {
+        display: inline-block;
+        width: auto;
+        padding: 8px 4px;
+        border-bottom: 0;
+        vertical-align: middle;
+      }
+
+      > .item-discussionTitle {
+        display: block;
+        width: 100%;
+        padding: 8px 15px;
+      }
+    }
+
+    .TextEditor-editorContainer {
+      min-height: 140px;
+    }
+
+    .TextEditor-editorContainer > .TextEditor-editor {
+      min-height: 140px !important;
+    }
+
     .TextEditor-editorContainer.is-split-view {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto;
+      grid-template-rows: minmax(140px, 1fr) auto;
       row-gap: 8px;
     }
 
