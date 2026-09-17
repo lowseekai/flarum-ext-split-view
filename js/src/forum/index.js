@@ -3,7 +3,9 @@ import { extend } from 'flarum/common/extend';
 import TextEditor from 'flarum/common/components/TextEditor';
 
 const PREVIEW_MIN_HEIGHT = 120;
+const MOBILE_PREVIEW_MIN_HEIGHT = 180;
 const PREVIEW_UPDATE_INTERVAL = 150;
+const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
 function getEditorContainer(component) {
   return component.$('.TextEditor-editorContainer')[0];
@@ -41,7 +43,8 @@ function syncPreviewHeight(component) {
 
   if (!preview || !editor) return;
 
-  const height = Math.max(PREVIEW_MIN_HEIGHT, editor.getBoundingClientRect().height || editor.offsetHeight);
+  const minHeight = window.matchMedia(MOBILE_MEDIA_QUERY).matches ? MOBILE_PREVIEW_MIN_HEIGHT : PREVIEW_MIN_HEIGHT;
+  const height = Math.max(minHeight, editor.getBoundingClientRect().height || editor.offsetHeight);
 
   preview.style.height = `${height}px`;
   preview.style.maxHeight = `${height}px`;

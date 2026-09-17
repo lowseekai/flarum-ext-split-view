@@ -175,17 +175,26 @@
     }
 
     .TextEditor-editorContainer {
-      min-height: 140px;
+      min-height: 340px;
     }
 
-    .TextEditor-editorContainer > .TextEditor-editor {
-      min-height: 140px !important;
+    .TextEditor-editorContainer .ComposerBody-mentionsWrapper,
+    .TextEditor-editorContainer .ComposerBody-emojiWrapper,
+    .TextEditor-editorContainer .TextEditor-editor {
+      min-height: 340px !important;
     }
 
     .TextEditor-editorContainer.is-split-view {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: minmax(140px, 1fr) auto;
+      grid-template-rows: minmax(180px, auto) minmax(180px, auto);
       row-gap: 8px;
+    }
+
+    .TextEditor-editorContainer.is-split-view .ComposerBody-mentionsWrapper,
+    .TextEditor-editorContainer.is-split-view .ComposerBody-emojiWrapper,
+    .TextEditor-editorContainer.is-split-view .TextEditor-editor,
+    .TextEditor-editorContainer.is-split-view .Split-view {
+      min-height: 180px !important;
     }
 
     .Split-view {
