@@ -204,13 +204,18 @@
     }
 
     .TextEditor-editorContainer {
-      min-height: 340px;
+      min-height: 240px;
     }
 
-    .TextEditor-editorContainer .ComposerBody-mentionsWrapper,
-    .TextEditor-editorContainer .ComposerBody-emojiWrapper,
-    .TextEditor-editorContainer .TextEditor-editor {
-      min-height: 340px !important;
+    .TextEditor-editorContainer > .ComposerBody-mentionsWrapper,
+    .TextEditor-editorContainer > .ComposerBody-mentionsWrapper > .ComposerBody-emojiWrapper,
+    .TextEditor-editorContainer .TextEditor-editor:not(.Pay2SeeVisualEditor),
+    .TextEditor-editorContainer .Pay2SeeVisualEditor--active {
+      min-height: 240px;
+    }
+
+    .TextEditor-editorContainer .Pay2SeeVisualEditor:not(.Pay2SeeVisualEditor--active) {
+      min-height: 0;
     }
 
     .TextEditor-editorContainer.is-split-view {
@@ -219,11 +224,12 @@
       row-gap: 8px;
     }
 
-    .TextEditor-editorContainer.is-split-view .ComposerBody-mentionsWrapper,
-    .TextEditor-editorContainer.is-split-view .ComposerBody-emojiWrapper,
-    .TextEditor-editorContainer.is-split-view .TextEditor-editor,
+    .TextEditor-editorContainer.is-split-view > .ComposerBody-mentionsWrapper,
+    .TextEditor-editorContainer.is-split-view > .ComposerBody-mentionsWrapper > .ComposerBody-emojiWrapper,
+    .TextEditor-editorContainer.is-split-view .TextEditor-editor:not(.Pay2SeeVisualEditor),
+    .TextEditor-editorContainer.is-split-view .Pay2SeeVisualEditor--active,
     .TextEditor-editorContainer.is-split-view .Split-view {
-      min-height: 180px !important;
+      min-height: 180px;
     }
 
     .Split-view {

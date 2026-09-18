@@ -11,6 +11,23 @@ function getEditorContainer(component) {
   return component.$('.TextEditor-editorContainer')[0];
 }
 
+function getVisibleEditor(container) {
+  if (!container) return null;
+
+  const editors = Array.from(container.querySelectorAll('.TextEditor-editor'));
+
+  return (
+    editors.find((editor) => {
+      const style = window.getComputedStyle(editor);
+
+      return style.display !== 'none' && style.visibility !== 'hidden' && editor.offsetParent !== null;
+    }) ||
+    editors.find((editor) => editor.classList.contains('Composer-flexible')) ||
+    editors[0] ||
+    null
+  );
+}
+
 function ensurePreviewElement(component) {
   const container = getEditorContainer(component);
 
@@ -39,7 +56,7 @@ function ensurePreviewElement(component) {
 function syncPreviewHeight(component) {
   const container = getEditorContainer(component);
   const preview = container && container.querySelector('.Split-view');
-  const editor = container && container.querySelector('.TextEditor-editor');
+  const editor = getVisibleEditor(container);
 
   if (!preview || !editor) return;
 
@@ -86,17 +103,28 @@ function stopPreview(component) {
 
 function observeEditor(component) {
   const container = getEditorContainer(component);
-  const editor = container && container.querySelector('.TextEditor-editor');
+  const editor = getVisibleEditor(container);
 
-  if (!editor || component.composerResizeObserver || component.composerResizeHandler) return;
+  if (!editor) return;
+
+  if (component.composerObservedEditor === editor && (component.composerResizeObserver || component.composerResizeHandler)) return;
+
+  if (component.composerResizeObserver) {
+    component.composerResizeObserver.disconnect();
+    component.composerResizeObserver = null;
+  }
+
+  component.composerObservedEditor = editor;
 
   if (typeof ResizeObserver !== 'undefined') {
     component.composerResizeObserver = new ResizeObserver(() => syncPreviewHeight(component));
     component.composerResizeObserver.observe(editor);
   }
 
-  component.composerResizeHandler = () => syncPreviewHeight(component);
-  window.addEventListener('resize', component.composerResizeHandler);
+  if (!component.composerResizeHandler) {
+    component.composerResizeHandler = () => syncPreviewHeight(component);
+    window.addEventListener('resize', component.composerResizeHandler);
+  }
 }
 
 function stopObservingEditor(component) {
@@ -104,6 +132,8 @@ function stopObservingEditor(component) {
     component.composerResizeObserver.disconnect();
     component.composerResizeObserver = null;
   }
+
+  component.composerObservedEditor = null;
 
   if (component.composerResizeHandler) {
     window.removeEventListener('resize', component.composerResizeHandler);
