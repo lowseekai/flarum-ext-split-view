@@ -11,21 +11,57 @@ function getEditorContainer(component) {
   return component.$('.TextEditor-editorContainer')[0];
 }
 
+function isVisibleEditor(editor) {
+  if (!editor) return false;
+
+  const style = window.getComputedStyle(editor);
+
+  return style.display !== 'none' && style.visibility !== 'hidden' && editor.offsetParent !== null;
+}
+
+function getEditorWrappers(container) {
+  if (!container) return [];
+
+  return Array.from(container.children).filter((child) => child.classList.contains('ComposerBody-mentionsWrapper'));
+}
+
+function getVisibleEditorWrapper(container) {
+  const wrappers = getEditorWrappers(container);
+
+  return (
+    wrappers.find((wrapper) => Array.from(wrapper.querySelectorAll('.TextEditor-editor')).some(isVisibleEditor)) ||
+    wrappers[0] ||
+    null
+  );
+}
+
 function getVisibleEditor(container) {
   if (!container) return null;
 
   const editors = Array.from(container.querySelectorAll('.TextEditor-editor'));
 
-  return (
-    editors.find((editor) => {
-      const style = window.getComputedStyle(editor);
+  return editors.find(isVisibleEditor) || editors.find((editor) => editor.classList.contains('Composer-flexible')) || editors[0] || null;
+}
 
-      return style.display !== 'none' && style.visibility !== 'hidden' && editor.offsetParent !== null;
-    }) ||
-    editors.find((editor) => editor.classList.contains('Composer-flexible')) ||
-    editors[0] ||
-    null
-  );
+function syncEditorWrapperLayout(container, preview) {
+  const wrappers = getEditorWrappers(container);
+
+  if (!wrappers.length) return;
+
+  const visibleWrapper = getVisibleEditorWrapper(container);
+
+  wrappers.forEach((wrapper) => {
+    wrapper.classList.toggle('Split-view-editorWrapper--inactive', wrapper !== visibleWrapper);
+  });
+
+  if (!preview || !visibleWrapper) return;
+
+  // Pay-to-see can create two mention wrappers: one for the visual editor and
+  // one for the serialized textarea. Keep only the active wrapper in the
+  // layout, with the preview immediately after it.
+  if (visibleWrapper.nextElementSibling !== preview) {
+    visibleWrapper.after(preview);
+  }
 }
 
 function ensurePreviewElement(component) {
@@ -34,7 +70,6 @@ function ensurePreviewElement(component) {
   if (!container) return null;
 
   let preview = container.querySelector('.Split-view');
-  const editorWrapper = container.querySelector('.ComposerBody-mentionsWrapper');
 
   if (!preview) {
     preview = document.createElement('div');
@@ -44,11 +79,7 @@ function ensurePreviewElement(component) {
     container.append(preview);
   }
 
-  // Flarum can render the preview before the editor wrapper. Keep the
-  // Markdown editor on the left and the preview on the right.
-  if (editorWrapper && editorWrapper.nextElementSibling !== preview) {
-    editorWrapper.after(preview);
-  }
+  syncEditorWrapperLayout(container, preview);
 
   return preview;
 }
@@ -59,6 +90,8 @@ function syncPreviewHeight(component) {
   const editor = getVisibleEditor(container);
 
   if (!preview || !editor) return;
+
+  syncEditorWrapperLayout(container, preview);
 
   const minHeight = window.matchMedia(MOBILE_MEDIA_QUERY).matches ? MOBILE_PREVIEW_MIN_HEIGHT : PREVIEW_MIN_HEIGHT;
   const height = Math.max(minHeight, editor.getBoundingClientRect().height || editor.offsetHeight);
