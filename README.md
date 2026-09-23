@@ -1,21 +1,37 @@
 # Split View
 
-A [Flarum](http://flarum.org) extension. 
+A Flarum extension that adds a live Markdown preview beside the composer.
 
-Side-by-side Markdown editor and preview
+This branch targets Flarum `2.0.x`. The package name remains
+`nodeloc/flarum-ext-split-view` so it can replace the existing extension
+without changing the Flarum extension ID.
 
-![demo](docs/chrome-capture-2024-5-16.gif)
+## Installation
 
-### 📥 Installation
+Add this repository as a Composer VCS repository, then require the Flarum 2
+branch:
 
-```sh
-composer require nodeloc/flarum-ext-split-view
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/lowseekai/flarum-ext-split-view"
+    }
+  ]
+}
 ```
 
-### ♻ Updating
-
 ```sh
-composer update nodeloc/flarum-ext-split-view
+composer require nodeloc/flarum-ext-split-view:dev-flarum-2.x
 ```
 
-### 🔗 Links
+The preview button is provided by Flarum core. When enabled, this extension
+renders the editor on the left and a live preview on the right on larger
+screens, with a vertical layout on phones.
+
+## Updating
+
+```sh
+composer update nodeloc/flarum-ext-split-view --with-dependencies
+```
