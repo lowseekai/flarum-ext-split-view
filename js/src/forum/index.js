@@ -199,7 +199,8 @@ function toggleSplitView(event) {
   event?.preventDefault();
 
   this.composer.isSplitView = !this.composer.isSplitView;
-  m.redraw();
+  // Flush the state change immediately so the preview visibility follows the toggle.
+  m.redraw.sync();
 }
 
 function enableSplitViewOnComposers() {
