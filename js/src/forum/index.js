@@ -1,6 +1,7 @@
 import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import TextEditor from 'flarum/common/components/TextEditor';
+import extractText from 'flarum/common/utils/extractText';
 
 const PREVIEW_MIN_HEIGHT = 120;
 const PREVIEW_UPDATE_INTERVAL = 150;
@@ -92,10 +93,12 @@ function syncPreviewHeight(component) {
 
   syncEditorWrapperLayout(container, preview);
 
-  const isMobileSplit = window.matchMedia(MOBILE_MEDIA_QUERY).matches && container.classList.contains('is-split-view');
+  const isMobile = window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+  const isMobileSplit = isMobile && container.classList.contains('is-split-view');
+  container.classList.toggle('is-mobile-preview', isMobileSplit);
 
-  // On phones the editor and preview share the height allocated by Flarum.
-  // Sizing the textarea alone leaves the preview outside that allocation.
+  // Give the active mobile view the height allocated by Flarum; the hidden
+  // editor must not keep its own flexible allocation while previewing.
   let layoutChanged = container.classList.contains('Composer-flexible') !== isMobileSplit;
   container.classList.toggle('Composer-flexible', isMobileSplit);
   container.querySelectorAll('.TextEditor-editor').forEach((candidate) => {
@@ -132,7 +135,10 @@ function renderPreview(component) {
 
   if (!preview) return false;
 
-  s9e.TextFormatter.preview(component.attrs.composer.fields.content() || '', preview);
+  const content = component.attrs.composer.fields.content() || '';
+  s9e.TextFormatter.preview(content, preview);
+  preview.classList.toggle('Split-view--empty', !content.trim());
+  preview.setAttribute('data-empty-label', extractText(app.translator.trans('nodeloc-split-view.forum.empty_preview')));
   syncPreviewHeight(component);
 
   return true;
@@ -201,6 +207,58 @@ function stopObservingEditor(component) {
   }
 }
 
+function syncMobileComposer(component) {
+  const container = getEditorContainer(component);
+  const composer = container?.closest('.Composer');
+
+  if (!container || !composer) return;
+
+  const isMobile = window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+  const viewport = window.visualViewport;
+  const height = viewport?.height || window.innerHeight;
+  const top = viewport?.offsetTop || 0;
+
+  composer.classList.toggle('SplitView-mobileComposer', isMobile);
+  composer.style.setProperty('--split-view-viewport-height', `${height}px`);
+  composer.style.setProperty('--split-view-viewport-top', `${top}px`);
+  composer.style.setProperty('--split-view-viewport-document-top', `${window.scrollY + top}px`);
+}
+
+function observeMobileComposer(component) {
+  if (component.mobileComposerViewportHandler) return;
+
+  const handler = () => {
+    syncMobileComposer(component);
+    syncPreviewHeight(component);
+  };
+  const viewport = window.visualViewport;
+
+  window.addEventListener('resize', handler);
+  viewport?.addEventListener('resize', handler);
+  viewport?.addEventListener('scroll', handler);
+
+  component.mobileComposerViewportHandler = handler;
+  component.mobileComposerViewport = viewport;
+}
+
+function stopObservingMobileComposer(component) {
+  const handler = component.mobileComposerViewportHandler;
+
+  if (!handler) return;
+
+  window.removeEventListener('resize', handler);
+  component.mobileComposerViewport?.removeEventListener('resize', handler);
+  component.mobileComposerViewport?.removeEventListener('scroll', handler);
+  component.mobileComposerViewportHandler = null;
+  component.mobileComposerViewport = null;
+
+  const composer = getEditorContainer(component)?.closest('.Composer');
+  composer?.classList.remove('SplitView-mobileComposer');
+  composer?.style.removeProperty('--split-view-viewport-height');
+  composer?.style.removeProperty('--split-view-viewport-top');
+  composer?.style.removeProperty('--split-view-viewport-document-top');
+}
+
 function observeEditorWrappers(component) {
   const container = getEditorContainer(component);
 
@@ -244,6 +302,7 @@ function syncSplitView(component) {
 
   container.classList.toggle('is-split-view', isActive);
   preview.classList.toggle('hidden', !isActive);
+  container.closest('.Composer')?.querySelector('.item-preview button')?.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
   if (isActive) {
     observeEditor(component);
@@ -259,11 +318,40 @@ function syncSplitView(component) {
 function toggleSplitView(event) {
   event?.preventDefault();
 
+  const isMobile = window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+  const container = this.$('.TextEditor-editorContainer')[0];
+  const editor = isMobile && !this.composer.isSplitView ? getVisibleEditor(container) : null;
+
+  if (editor) {
+    this.splitViewSelection = {
+      start: typeof editor.selectionStart === 'number' ? editor.selectionStart : null,
+      end: typeof editor.selectionEnd === 'number' ? editor.selectionEnd : null,
+      direction: editor.selectionDirection,
+    };
+    editor.blur();
+  }
+
   this.composer.isSplitView = !this.composer.isSplitView;
   // The preview button can be clicked while another composer extension has
   // a pending redraw. Flush this state change immediately so the editor and
   // preview never get out of sync.
   m.redraw.sync();
+
+  if (isMobile && !this.composer.isSplitView) {
+    const selection = this.splitViewSelection;
+
+    requestAnimationFrame(() => {
+      const activeEditor = getVisibleEditor(this.$('.TextEditor-editorContainer')[0]);
+
+      if (!activeEditor) return;
+
+      activeEditor.focus();
+
+      if (selection?.start !== null && selection?.start !== undefined && typeof activeEditor.setSelectionRange === 'function') {
+        activeEditor.setSelectionRange(selection.start, selection.end, selection.direction);
+      }
+    });
+  }
 }
 
 function enableSplitViewOnComposers() {
@@ -282,6 +370,8 @@ app.initializers.add('nodeloc-split-view', () => {
 
     syncSplitView(this);
     observeEditorWrappers(this);
+    syncMobileComposer(this);
+    observeMobileComposer(this);
   });
 
   extend(TextEditor.prototype, 'onupdate', function () {
@@ -289,12 +379,15 @@ app.initializers.add('nodeloc-split-view', () => {
 
     syncSplitView(this);
     observeEditorWrappers(this);
+    syncMobileComposer(this);
+    observeMobileComposer(this);
   });
 
   extend(TextEditor.prototype, 'onremove', function () {
     stopPreview(this);
     stopObservingEditor(this);
     stopObservingEditorWrappers(this);
+    stopObservingMobileComposer(this);
   });
 
   enableSplitViewOnComposers();

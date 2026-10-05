@@ -122,6 +122,75 @@
 }
 
 @media (max-width: 767px) {
+  .Composer.SplitView-mobileComposer.visible:not(.minimized) {
+    position: fixed !important;
+    top: var(--split-view-viewport-top, 0px);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    height: var(--split-view-viewport-height, 100dvh) !important;
+    max-height: none;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mobile-safari .Composer.SplitView-mobileComposer.visible:not(.minimized) {
+    position: absolute !important;
+    top: var(--split-view-viewport-document-top, 0px) !important;
+  }
+
+  .Composer.SplitView-mobileComposer.visible:not(.minimized) {
+    .Composer-content,
+    .ComposerBody,
+    .ComposerBody-content,
+    .ComposerBody-editor,
+    .ComposerBody-editor > .TextEditor {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .Composer-content {
+      padding: 0;
+    }
+
+    .ComposerBody-header,
+    .Composer-controls,
+    .Composer-footer {
+      flex: 0 0 auto;
+    }
+
+    .ComposerBody-header > .item-title {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+    }
+
+    .ComposerBody-editor {
+      box-sizing: border-box;
+    }
+
+    .TextEditor-editorContainer {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .TextEditor-editorContainer.is-mobile-preview {
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .TextEditor-editorContainer.is-mobile-preview > .ComposerBody-mentionsWrapper {
+      display: none !important;
+    }
+  }
+
   .visible.Composer:not(.minimized)::before {
     opacity: 0;
   }
@@ -248,6 +317,17 @@
       border-left: 0;
       border-top: 1px dashed var(--primary-color);
       padding: 8px 0;
+    }
+
+    .Split-view--empty::before {
+      content: attr(data-empty-label);
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      left: 16px;
+      color: var(--muted-color);
+      text-align: center;
+      transform: translateY(-50%);
     }
   }
 }
