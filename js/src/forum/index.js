@@ -239,7 +239,10 @@ function toggleSplitView(event) {
   event?.preventDefault();
 
   this.composer.isSplitView = !this.composer.isSplitView;
-  m.redraw();
+  // The preview button can be clicked while another composer extension has
+  // a pending redraw. Flush this state change immediately so the editor and
+  // preview never get out of sync.
+  m.redraw.sync();
 }
 
 function enableSplitViewOnComposers() {
