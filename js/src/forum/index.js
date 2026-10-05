@@ -30,6 +30,7 @@ function getVisibleEditorWrapper(container) {
 
   return (
     wrappers.find((wrapper) => Array.from(wrapper.querySelectorAll('.TextEditor-editor')).some(isVisibleEditor)) ||
+    wrappers.find((wrapper) => !wrapper.classList.contains('Split-view-editorWrapper--inactive')) ||
     wrappers[0] ||
     null
   );
@@ -39,8 +40,15 @@ function getVisibleEditor(container) {
   if (!container) return null;
 
   const editors = Array.from(container.querySelectorAll('.TextEditor-editor'));
+  const activeWrapper = getVisibleEditorWrapper(container);
 
-  return editors.find(isVisibleEditor) || editors.find((editor) => editor.classList.contains('Composer-flexible')) || editors[0] || null;
+  return (
+    editors.find(isVisibleEditor) ||
+    editors.find((editor) => activeWrapper?.contains(editor)) ||
+    editors.find((editor) => editor.classList.contains('Composer-flexible')) ||
+    editors[0] ||
+    null
+  );
 }
 
 function syncEditorWrapperLayout(container, preview) {

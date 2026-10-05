@@ -1,18 +1,21 @@
 // Run with agent-browser-cli exec --tab <id> --file tests/composer-layout.browser.js.
-// Open an unpublished composer first. Test at phone widths with a shortened
-// viewport, and on desktop. This toggles preview ten times without submitting.
+// Open an unpublished composer first. This checks ten preview toggles without
+// changing or submitting the current draft.
 return await (async () => {
   const composer = document.querySelector('.Composer.visible:not(.minimized)');
   const button = composer?.querySelector('.item-preview button');
   if (!button) throw new Error('Open a composer with a preview button first');
 
-  const textarea = composer.querySelector('.TextEditor-editor');
-  const sample = 'Split View mobile layout regression';
-  if (textarea?.tagName === 'TEXTAREA') {
-    textarea.value = sample;
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    m.redraw.sync();
-  }
+  const editableNodes = (container) => Array.from(container.querySelectorAll('.TextEditor-editor, [contenteditable="true"]'));
+  const isVisible = (element) => {
+    const style = getComputedStyle(element);
+    return style.display !== 'none' && style.visibility !== 'hidden' && element.offsetParent !== null && element.getBoundingClientRect().height > 20;
+  };
+  const container = composer.querySelector('.TextEditor-editorContainer');
+  const initialValues = editableNodes(container).map((element) => element.tagName === 'TEXTAREA' ? element.value : element.textContent);
+  const initialWrapper = Array.from(container.children).find((element) => {
+    return element.classList.contains('ComposerBody-mentionsWrapper') && !element.classList.contains('Split-view-editorWrapper--inactive');
+  });
 
   const results = [];
   for (let i = 0; i < 10; i++) {
@@ -21,10 +24,7 @@ return await (async () => {
     m.redraw.sync();
     await scheduler.postTask(() => {});
 
-    const container = composer.querySelector('.TextEditor-editorContainer');
-    const editor = Array.from(container.querySelectorAll('.TextEditor-editor')).find((element) => {
-      return getComputedStyle(element).display !== 'none' && element.offsetParent !== null;
-    });
+    const editor = editableNodes(container).find(isVisible);
     const preview = container.querySelector('.Split-view');
     const rootRect = composer.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
@@ -53,7 +53,8 @@ return await (async () => {
       previewFits: !mobilePreview || (previewRect.top >= containerRect.top - 1 && previewRect.bottom <= footerRect.top + 1),
       exclusiveViews: !mobile || (mobilePreview ? !editorVisible && previewVisible : editorVisible && !previewVisible),
       singleAllocation: flexible.length === 1 && flexible[0] === (mobilePreview ? container : editor),
-      draftPreserved: !textarea || textarea.tagName !== 'TEXTAREA' || textarea.value === sample,
+      activeWrapperPreserved: !mobile || mobilePreview || Array.from(container.children).includes(initialWrapper) && !initialWrapper.classList.contains('Split-view-editorWrapper--inactive'),
+      draftPreserved: JSON.stringify(editableNodes(container).map((element) => element.tagName === 'TEXTAREA' ? element.value : element.textContent)) === JSON.stringify(initialValues),
     });
   }
 
@@ -61,7 +62,7 @@ return await (async () => {
     viewport: { width: innerWidth, height: innerHeight },
     results,
     passed: results.every((result) => {
-      return result.toolbarVisible && result.fullscreen && result.previewFits && result.exclusiveViews && result.singleAllocation && result.draftPreserved;
+      return result.toolbarVisible && result.fullscreen && result.previewFits && result.exclusiveViews && result.singleAllocation && result.activeWrapperPreserved && result.draftPreserved;
     }),
   };
 })().catch((error) => ({ passed: false, error: error.message }));
