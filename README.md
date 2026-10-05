@@ -8,7 +8,7 @@ without changing the Flarum extension ID.
 
 ## Installation
 
-Add this repository as a Composer VCS repository, then require the Flarum 2
+Add this repository as a Composer VCS repository, then require the `main`
 branch:
 
 ```json
@@ -23,7 +23,7 @@ branch:
 ```
 
 ```sh
-composer require nodeloc/flarum-ext-split-view:dev-flarum-2.x
+composer require nodeloc/flarum-ext-split-view:dev-main
 ```
 
 The preview button is provided by Flarum core. When enabled, this extension
