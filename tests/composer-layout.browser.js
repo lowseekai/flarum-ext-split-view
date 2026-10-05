@@ -54,6 +54,7 @@ return await (async () => {
       exclusiveViews: !mobile || (mobilePreview ? !editorVisible && previewVisible : editorVisible && !previewVisible),
       singleAllocation: flexible.length === 1 && flexible[0] === (mobilePreview ? container : editor),
       activeWrapperPreserved: !mobile || mobilePreview || Array.from(container.children).includes(initialWrapper) && !initialWrapper.classList.contains('Split-view-editorWrapper--inactive'),
+      translationsResolved: !preview.getAttribute('aria-label').startsWith('nodeloc-') && !preview.getAttribute('data-empty-label').startsWith('nodeloc-'),
       draftPreserved: JSON.stringify(editableNodes(container).map((element) => element.tagName === 'TEXTAREA' ? element.value : element.textContent)) === JSON.stringify(initialValues),
     });
   }
@@ -62,7 +63,7 @@ return await (async () => {
     viewport: { width: innerWidth, height: innerHeight },
     results,
     passed: results.every((result) => {
-      return result.toolbarVisible && result.fullscreen && result.previewFits && result.exclusiveViews && result.singleAllocation && result.activeWrapperPreserved && result.draftPreserved;
+      return result.toolbarVisible && result.fullscreen && result.previewFits && result.exclusiveViews && result.singleAllocation && result.activeWrapperPreserved && result.translationsResolved && result.draftPreserved;
     }),
   };
 })().catch((error) => ({ passed: false, error: error.message }));

@@ -83,7 +83,7 @@ function ensurePreviewElement(component) {
     preview = document.createElement('div');
     preview.className = 'Split-view Post-body hidden';
     preview.setAttribute('role', 'region');
-    preview.setAttribute('aria-label', 'Preview');
+    preview.setAttribute('aria-label', extractText(app.translator.trans('nodeloc-split-view.forum.preview')));
     container.append(preview);
   }
 
