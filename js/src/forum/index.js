@@ -3,7 +3,6 @@ import { extend } from 'flarum/common/extend';
 import TextEditor from 'flarum/common/components/TextEditor';
 
 const PREVIEW_MIN_HEIGHT = 120;
-const MOBILE_PREVIEW_MIN_HEIGHT = 180;
 const PREVIEW_UPDATE_INTERVAL = 150;
 const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
@@ -93,8 +92,29 @@ function syncPreviewHeight(component) {
 
   syncEditorWrapperLayout(container, preview);
 
-  const minHeight = window.matchMedia(MOBILE_MEDIA_QUERY).matches ? MOBILE_PREVIEW_MIN_HEIGHT : PREVIEW_MIN_HEIGHT;
-  const height = Math.max(minHeight, editor.getBoundingClientRect().height || editor.offsetHeight);
+  const isMobileSplit = window.matchMedia(MOBILE_MEDIA_QUERY).matches && container.classList.contains('is-split-view');
+
+  // On phones the editor and preview share the height allocated by Flarum.
+  // Sizing the textarea alone leaves the preview outside that allocation.
+  let layoutChanged = container.classList.contains('Composer-flexible') !== isMobileSplit;
+  container.classList.toggle('Composer-flexible', isMobileSplit);
+  container.querySelectorAll('.TextEditor-editor').forEach((candidate) => {
+    const flexible = !isMobileSplit && candidate === editor;
+    layoutChanged ||= candidate.classList.contains('Composer-flexible') !== flexible;
+    candidate.classList.toggle('Composer-flexible', flexible);
+  });
+
+  if (layoutChanged) m.redraw();
+
+  if (isMobileSplit) {
+    if (editor.style.height) editor.style.height = '';
+    if (preview.style.height) preview.style.height = '';
+    if (preview.style.maxHeight) preview.style.maxHeight = '';
+    return;
+  }
+
+  if (container.style.height) container.style.height = '';
+  const height = Math.max(PREVIEW_MIN_HEIGHT, editor.getBoundingClientRect().height || editor.offsetHeight);
 
   const heightValue = `${height}px`;
 
@@ -232,6 +252,7 @@ function syncSplitView(component) {
   } else {
     stopPreview(component);
     stopObservingEditor(component);
+    syncPreviewHeight(component);
   }
 }
 
