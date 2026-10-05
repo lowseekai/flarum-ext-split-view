@@ -96,8 +96,15 @@ function syncPreviewHeight(component) {
   const minHeight = window.matchMedia(MOBILE_MEDIA_QUERY).matches ? MOBILE_PREVIEW_MIN_HEIGHT : PREVIEW_MIN_HEIGHT;
   const height = Math.max(minHeight, editor.getBoundingClientRect().height || editor.offsetHeight);
 
-  preview.style.height = `${height}px`;
-  preview.style.maxHeight = `${height}px`;
+  const heightValue = `${height}px`;
+
+  if (preview.style.height !== heightValue) {
+    preview.style.height = heightValue;
+  }
+
+  if (preview.style.maxHeight !== heightValue) {
+    preview.style.maxHeight = heightValue;
+  }
 }
 
 function renderPreview(component) {
@@ -174,6 +181,39 @@ function stopObservingEditor(component) {
   }
 }
 
+function observeEditorWrappers(component) {
+  const container = getEditorContainer(component);
+
+  if (!container) return;
+  if (component.composerWrapperObserver?.container === container) return;
+
+  stopObservingEditorWrappers(component);
+
+  const observer = new MutationObserver(() => {
+    const preview = container.querySelector('.Split-view');
+
+    syncEditorWrapperLayout(container, preview);
+
+    if (component.attrs.composer?.isSplitView) {
+      syncPreviewHeight(component);
+    }
+  });
+
+  observer.observe(container, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+  });
+
+  component.composerWrapperObserver = { container, observer };
+}
+
+function stopObservingEditorWrappers(component) {
+  component.composerWrapperObserver?.observer.disconnect();
+  component.composerWrapperObserver = null;
+}
+
 function syncSplitView(component) {
   const container = getEditorContainer(component);
   const preview = ensurePreviewElement(component);
@@ -214,20 +254,23 @@ function enableSplitViewOnComposers() {
 
 app.initializers.add('nodeloc-split-view', () => {
   extend(TextEditor.prototype, 'oncreate', function () {
-    if (!this.attrs.preview || !this.attrs.composer) return;
+    if (!this.attrs.composer) return;
 
     syncSplitView(this);
+    observeEditorWrappers(this);
   });
 
   extend(TextEditor.prototype, 'onupdate', function () {
-    if (!this.attrs.preview || !this.attrs.composer) return;
+    if (!this.attrs.composer) return;
 
     syncSplitView(this);
+    observeEditorWrappers(this);
   });
 
   extend(TextEditor.prototype, 'onremove', function () {
     stopPreview(this);
     stopObservingEditor(this);
+    stopObservingEditorWrappers(this);
   });
 
   enableSplitViewOnComposers();
