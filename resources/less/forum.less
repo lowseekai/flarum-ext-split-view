@@ -315,8 +315,12 @@
 
     .Split-view {
       border-left: 0;
-      border-top: 1px dashed var(--primary-color);
+      border-top: 0;
       padding: 8px 0;
+    }
+
+    .Split-view.Post-body::after {
+      display: none;
     }
 
     .Split-view--empty::before {
